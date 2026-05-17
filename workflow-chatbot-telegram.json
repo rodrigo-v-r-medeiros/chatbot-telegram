@@ -1,0 +1,211 @@
+{
+  "name": "Bot do Clima - Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300],
+      "webhookId": "f0e1d2c3-b4a5-6789-0123-456789abcdef",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "queue-field",
+              "name": "queue",
+              "value": "={{ $json.message.text.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Formatar Entrada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.queue }}"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            },
+            {
+              "name": "lang",
+              "value": "pt_br"
+            },
+            {
+              "name": "appid",
+              "value": "={{ $env.OPENWEATHER_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c3d4e5f6-a7b8-9012-cdef-234567890123",
+      "name": "OpenWeather API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-cod",
+              "leftValue": "={{ $json.cod }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d4e5f6a7-b8c9-0123-defa-345678901234",
+      "name": "Resposta Válida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [780, 300]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const item = $input.item.json;\nconst temp = Math.round(item.main.temp);\nconst city = item.name;\nconst chatId = $('Telegram Trigger').item.json.message.chat.id;\n\nreturn [\n  {\n    json: {\n      message: `\uD83C\uDF24\uFE0F A temperatura em ${city} é de ${temp}°C.`,\n      chat_id: chatId\n    }\n  }\n];"
+      },
+      "id": "e5f6a7b8-c9d0-1234-efab-456789012345",
+      "name": "Formatar Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 180]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.message }}",
+        "appendAttribution": false,
+        "additionalFields": {}
+      },
+      "id": "f6a7b8c9-d0e1-2345-fabc-567890123456",
+      "name": "Enviar Temperatura",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1300, 180],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "\u274C Cidade não encontrada. Use o formato Cidade,UF,BR (ex.: São Paulo,SP,BR).",
+        "appendAttribution": false,
+        "additionalFields": {}
+      },
+      "id": "a7b8c9d0-e1f2-3456-abcd-678901234567",
+      "name": "Enviar Erro",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1040, 420],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          { "node": "Formatar Entrada", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Formatar Entrada": {
+      "main": [
+        [
+          { "node": "OpenWeather API", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "OpenWeather API": {
+      "main": [
+        [
+          { "node": "Resposta Válida?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Resposta Válida?": {
+      "main": [
+        [
+          { "node": "Formatar Mensagem", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Enviar Erro", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Formatar Mensagem": {
+      "main": [
+        [
+          { "node": "Enviar Temperatura", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "12345678-90ab-cdef-1234-567890abcdef",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "local-instance"
+  },
+  "id": "87654321-abcd-ef01-2345-678901234567",
+  "tags": []
+}

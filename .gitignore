@@ -1,0 +1,11 @@
+# Nunca commitar o .env com senhas/chaves
+.env
+
+# Dados dos volumes Docker locais (se usar bind mount)
+postgres_data/
+redis_data/
+n8n_data/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

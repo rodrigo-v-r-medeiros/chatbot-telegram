@@ -98,7 +98,7 @@ A chave é lida automaticamente via variável de ambiente `$env.OPENWEATHER_API_
 
 ## Como ativar e testar o chatbot
 
-1. Com o workflow importado e as credenciais configuradas, clique em **Save** e depois no toggle **Inactive → Active**
+1. Com o workflow importado e as credenciais configuradas, clique em **Publish** (canto superior direito)
 2. O n8n irá registrar o webhook automaticamente no Telegram
 3. Abra o Telegram e envie uma mensagem para o seu bot:
    - `São Paulo,SP,BR` → deve retornar a temperatura atual

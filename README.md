@@ -2,6 +2,10 @@
 
 Chatbot no Telegram que informa a temperatura atual de qualquer cidade do Brasil. O usuário envia o nome da cidade e recebe uma resposta amigável com a temperatura em graus Celsius, consumindo a API gratuita do OpenWeather.
 
+## Demonstração
+
+![Bot do Clima em funcionamento](imagens/imagem_bot_clima.png)
+
 ## Exemplo de uso
 
 ```
